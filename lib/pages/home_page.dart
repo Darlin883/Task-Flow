@@ -166,10 +166,10 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.task),
             label: 'Tasks',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category),
-            label: 'Categories',
-          ),
+          // BottomNavigationBarItem(
+          //   // icon: Icon(Icons.category),
+          //   // label: 'Categories',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
