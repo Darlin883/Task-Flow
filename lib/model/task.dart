@@ -1,87 +1,86 @@
-
-
 class Task {
   final int id;
   final String title;
   final String category;
   final DateTime dueDate;
-  final  String priority;
-  final bool isCompleted;
+  final String priority;
+  bool isCompleted;
 
-  const Task({
+  Task({
     required this.id,
     required this.title,
     required this.category,
     required this.dueDate,
     required this.priority,
     required this.isCompleted,
-});
-
+  });
 }
 
-List<Task> dummyTasks=[
+List<Task> dummyTasks = [
   Task(
-    id:1,
-    title:"Walk Dog",
+    id: 1,
+    title: "Walk Dog",
     category: "Personal",
-    dueDate: DateTime(2026,4,16),
+    dueDate: DateTime(2026, 4, 16),
     priority: "high",
     isCompleted: false,
   ),
   Task(
-    id:2,
-    title:"Walk Cat",
+    id: 2,
+    title: "Walk Cat",
     category: "Personal",
-    dueDate: DateTime(2026,5,16),
+    dueDate: DateTime(2026, 5, 16),
     priority: "medium",
     isCompleted: false,
   ),
   Task(
-    id:3,
-    title:"Walk Boss Croc",
+    id: 3,
+    title: "Walk Boss Croc",
     category: "Work",
-    dueDate: DateTime(2026,4,21),
+    dueDate: DateTime(2026, 4, 21),
     priority: "high",
     isCompleted: false,
   ),
   Task(
-    id:4,
-    title:"Walk Friend",
+    id: 4,
+    title: "Walk Friend",
     category: "Personal",
-    dueDate: DateTime(2026,4,17),
-    priority: "hard",
+    dueDate: DateTime(2026, 4, 17),
+    priority: "high",
     isCompleted: false,
   ),
   Task(
-    id:5,
-    title:"Eat Food",
+    id: 5,
+    title: "Eat Food",
     category: "Personal",
-    dueDate: DateTime(2026,4,16),
-    priority: "hard",
+    dueDate: DateTime(2026, 4, 16),
+    priority: "high",
     isCompleted: false,
   ),
   Task(
-    id:6,
-    title:"Workout",
+    id: 6,
+    title: "Workout",
     category: "Personal",
-    dueDate: DateTime(2026,4,15),
-    priority: "hard",
+    dueDate: DateTime(2026, 4, 15),
+    priority: "high",
     isCompleted: true,
   ),
   Task(
-    id:7,
-    title:"Drink Water",
+    id: 7,
+    title: "Drink Water",
     category: "Personal",
-    dueDate: DateTime(2026,4,15),
+    dueDate: DateTime(2026, 4, 15),
     priority: "medium",
     isCompleted: true,
-  ),Task(
-    id:8,
-    title:"Hike",
+  ),
+  Task(
+    id: 8,
+    title: "Hike",
     category: "Personal",
-    dueDate: DateTime(2026,4,15),
-    priority: "",
+    dueDate: DateTime(2026, 4, 15),
+    priority: "medium",
     isCompleted: true,
   ),
 ];
+
 List<String> categories = ['All', 'Work', 'Personal', 'Shopping'];
