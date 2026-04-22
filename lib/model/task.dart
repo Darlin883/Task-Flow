@@ -1,10 +1,10 @@
 class Task {
-  final int id;
+  final String id;
   final String title;
   final String category;
   final DateTime dueDate;
   final String priority;
-  bool isCompleted;
+  final bool isCompleted;
 
   Task({
     required this.id,
@@ -14,73 +14,27 @@ class Task {
     required this.priority,
     required this.isCompleted,
   });
-}
 
-List<Task> dummyTasks = [
-  Task(
-    id: 1,
-    title: "Walk Dog",
-    category: "Personal",
-    dueDate: DateTime(2026, 4, 16),
-    priority: "high",
-    isCompleted: false,
-  ),
-  Task(
-    id: 2,
-    title: "Walk Cat",
-    category: "Personal",
-    dueDate: DateTime(2026, 5, 16),
-    priority: "medium",
-    isCompleted: false,
-  ),
-  Task(
-    id: 3,
-    title: "Walk Boss Croc",
-    category: "Work",
-    dueDate: DateTime(2026, 4, 21),
-    priority: "high",
-    isCompleted: false,
-  ),
-  Task(
-    id: 4,
-    title: "Walk Friend",
-    category: "Personal",
-    dueDate: DateTime(2026, 4, 17),
-    priority: "high",
-    isCompleted: false,
-  ),
-  Task(
-    id: 5,
-    title: "Eat Food",
-    category: "Personal",
-    dueDate: DateTime(2026, 4, 16),
-    priority: "high",
-    isCompleted: false,
-  ),
-  Task(
-    id: 6,
-    title: "Workout",
-    category: "Personal",
-    dueDate: DateTime(2026, 4, 15),
-    priority: "high",
-    isCompleted: true,
-  ),
-  Task(
-    id: 7,
-    title: "Drink Water",
-    category: "Personal",
-    dueDate: DateTime(2026, 4, 15),
-    priority: "medium",
-    isCompleted: true,
-  ),
-  Task(
-    id: 8,
-    title: "Hike",
-    category: "Personal",
-    dueDate: DateTime(2026, 4, 15),
-    priority: "medium",
-    isCompleted: true,
-  ),
-];
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'category': category,
+      'dueDate': dueDate.toIso8601String(),
+      'priority': priority,
+      'isCompleted': isCompleted,
+    };
+  }
+
+  factory Task.fromJson(Map<String, dynamic> json, String docId) {
+    return Task(
+      id: docId,
+      title: json['title'] ?? '',
+      category: json['category'] ?? '',
+      dueDate: DateTime.parse(json['dueDate']),
+      priority: json['priority'] ?? 'medium',
+      isCompleted: json['isCompleted'] ?? false,
+    );
+  }
+}
 
 List<String> categories = ['All', 'Work', 'Personal', 'Shopping'];

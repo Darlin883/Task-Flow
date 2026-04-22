@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../model/task.dart';
 import '../widgets/task_card.dart';
@@ -13,31 +14,28 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
-  List<Task> tasks = List.from(dummyTasks);
 
-  void _toggleTaskCompletion(int index) {
-    setState(() {
-      tasks[index].isCompleted = !tasks[index].isCompleted;
+  Future<void> _toggleTaskCompletion(Task task) async {
+    await FirebaseFirestore.instance.collection('tasks').doc(task.id).update({
+      'isCompleted': !task.isCompleted,
     });
   }
 
-  void _deleteTask(int index) {
-    setState(() {
-      tasks.removeAt(index);
-    });
+  Future<void> _deleteTask(Task task) async {
+    await FirebaseFirestore.instance.collection('tasks').doc(task.id).delete();
   }
 
-  Future<void> _openTaskDetails(int index) async {
+  Future<void> _openTaskDetails(Task task) async {
     final updatedTask = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => TaskDetailPage(task: tasks[index]),
+        builder: (_) => TaskDetailPage(task: task),
       ),
     );
 
-    if (updatedTask != null) {
-      setState(() {
-        tasks[index] = updatedTask;
+    if (updatedTask != null && updatedTask is Task) {
+      await FirebaseFirestore.instance.collection('tasks').doc(task.id).update({
+        'isCompleted': updatedTask.isCompleted,
       });
     }
   }
@@ -92,43 +90,74 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            child: ListView.separated(
-              itemCount: tasks.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 4),
-              itemBuilder: (context, index) {
-                final task = tasks[index];
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('tasks').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text('Something went wrong'),
+                  );
+                }
 
-                return Dismissible(
-                  key: Key(task.id.toString()),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    color: Colors.red,
-                    child: const Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                    ),
-                  ),
-                  onDismissed: (_) {
-                    _deleteTask(index);
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${task.title} deleted'),
+                final tasks = snapshot.data!.docs.map((doc) {
+                  return Task.fromJson(
+                    doc.data() as Map<String, dynamic>,
+                    doc.id,
+                  );
+                }).toList();
+
+                if (tasks.isEmpty) {
+                  return const Center(
+                    child: Text('No tasks yet'),
+                  );
+                }
+
+                return ListView.separated(
+                  itemCount: tasks.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 4),
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+
+                    return Dismissible(
+                      key: Key(task.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        color: Colors.red,
+                        child: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onDismissed: (_) async {
+                        await _deleteTask(task);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${task.title} deleted'),
+                            ),
+                          );
+                        }
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          _openTaskDetails(task);
+                        },
+                        child: TaskCard(
+                          task: task,
+                          onToggleComplete: () => _toggleTaskCompletion(task),
+                        ),
                       ),
                     );
                   },
-                  child: GestureDetector(
-                    onTap: () {
-                      print(task.title);
-                      _openTaskDetails(index);
-                    },
-                    child: TaskCard(
-                      task: task,
-                      onToggleComplete: () => _toggleTaskCompletion(index),
-                    ),
-                  ),
                 );
               },
             ),
@@ -139,18 +168,12 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.teal,
         child: const Icon(Icons.add),
         onPressed: () async {
-          final newTask = await Navigator.push(
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => const AddTaskPage(),
             ),
           );
-
-          if (newTask != null) {
-            setState(() {
-              tasks.add(newTask);
-            });
-          }
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -166,10 +189,6 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.task),
             label: 'Tasks',
           ),
-          // BottomNavigationBarItem(
-          //   // icon: Icon(Icons.category),
-          //   // label: 'Categories',
-          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',

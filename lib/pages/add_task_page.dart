@@ -1,5 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../model/task.dart';
 
 class AddTaskPage extends StatefulWidget {
   const AddTaskPage({super.key});
@@ -14,21 +14,29 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController categoryController = TextEditingController();
 
-  String selectedPriority = "medium"; // default
+  String selectedPriority = 'medium';
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      final newTask = Task(
-        id: DateTime.now().millisecondsSinceEpoch,
-        title: titleController.text,
-        category: categoryController.text,
-        dueDate: DateTime.now(),
-        priority: selectedPriority,
-        isCompleted: false,
-      );
+      await FirebaseFirestore.instance.collection('tasks').add({
+        'title': titleController.text.trim(),
+        'category': categoryController.text.trim(),
+        'dueDate': DateTime.now().toIso8601String(),
+        'priority': selectedPriority,
+        'isCompleted': false,
+      });
 
-      Navigator.pop(context, newTask);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    categoryController.dispose();
+    super.dispose();
   }
 
   @override
@@ -48,21 +56,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 controller: titleController,
                 decoration: const InputDecoration(labelText: 'Task Title'),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.trim().isEmpty) {
                     return 'Enter a task title';
                   }
                   return null;
                 },
               ),
-
               TextFormField(
                 controller: categoryController,
                 decoration: const InputDecoration(labelText: 'Category'),
               ),
-
               const SizedBox(height: 16),
-
-              // PRIORITY DROPDOWN
               DropdownButtonFormField<String>(
                 value: selectedPriority,
                 decoration: const InputDecoration(
@@ -70,18 +74,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(
-                    value: 'low',
-                    child: Text('Low'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'medium',
-                    child: Text('Medium'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'high',
-                    child: Text('High'),
-                  ),
+                  DropdownMenuItem(value: 'low', child: Text('Low')),
+                  DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                  DropdownMenuItem(value: 'high', child: Text('High')),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -89,9 +84,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   });
                 },
               ),
-
               const SizedBox(height: 20),
-
               ElevatedButton(
                 onPressed: _submit,
                 child: const Text('Add Task'),
