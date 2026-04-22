@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/task.dart';
 import '../widgets/task_card.dart';
@@ -15,14 +16,22 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
+  CollectionReference<Map<String, dynamic>> get userTasksRef {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('tasks');
+  }
+
   Future<void> _toggleTaskCompletion(Task task) async {
-    await FirebaseFirestore.instance.collection('tasks').doc(task.id).update({
+    await userTasksRef.doc(task.id).update({
       'isCompleted': !task.isCompleted,
     });
   }
 
   Future<void> _deleteTask(Task task) async {
-    await FirebaseFirestore.instance.collection('tasks').doc(task.id).delete();
+    await userTasksRef.doc(task.id).delete();
   }
 
   Future<void> _openTaskDetails(Task task) async {
@@ -34,10 +43,14 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (updatedTask != null && updatedTask is Task) {
-      await FirebaseFirestore.instance.collection('tasks').doc(task.id).update({
+      await userTasksRef.doc(task.id).update({
         'isCompleted': updatedTask.isCompleted,
       });
     }
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
   }
 
   @override
@@ -49,8 +62,8 @@ class _HomePageState extends State<HomePage> {
       ),
       drawer: Drawer(
         child: ListView(
-          children: const [
-            DrawerHeader(
+          children: [
+            const DrawerHeader(
               decoration: BoxDecoration(color: Colors.teal),
               child: Text(
                 'TaskFlow',
@@ -58,8 +71,9 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.logout),
-              title: Text('Sign Out'),
+              leading: const Icon(Icons.logout),
+              title: const Text('Sign Out'),
+              onTap: _signOut,
             ),
           ],
         ),
@@ -91,7 +105,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('tasks').snapshots(),
+              stream: userTasksRef.snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return const Center(

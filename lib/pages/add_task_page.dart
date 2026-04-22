@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AddTaskPage extends StatefulWidget {
@@ -12,15 +13,21 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController titleController = TextEditingController();
-  final TextEditingController categoryController = TextEditingController();
 
+  String selectedCategory = 'Personal';
   String selectedPriority = 'medium';
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      await FirebaseFirestore.instance.collection('tasks').add({
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('tasks')
+          .add({
         'title': titleController.text.trim(),
-        'category': categoryController.text.trim(),
+        'category': selectedCategory,
         'dueDate': DateTime.now().toIso8601String(),
         'priority': selectedPriority,
         'isCompleted': false,
@@ -35,7 +42,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
   @override
   void dispose() {
     titleController.dispose();
-    categoryController.dispose();
     super.dispose();
   }
 
@@ -62,9 +68,32 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'Personal',
+                    child: Text('Personal'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Work',
+                    child: Text('Work'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Shopping',
+                    child: Text('Shopping'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedCategory = value!;
+                  });
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
