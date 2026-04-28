@@ -1,9 +1,17 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:task_flow_manager/model/task.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:task_flow_manager/firebase_options.dart';
 import 'package:task_flow_manager/pages/home_page.dart';
-import 'package:task_flow_manager/widgets/task_card.dart';
+import 'package:task_flow_manager/pages/login_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const TaskFlowApp());
 }
 
@@ -13,47 +21,26 @@ class TaskFlowApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-
       title: 'TaskFlow',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('TaskFlow'),
-          backgroundColor: Colors.teal,
-        ),
-        body: Column(
-          children: [
-            SizedBox(
-              height:40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (context,index){
-                return Container(
-                  margin:EdgeInsets.symmetric(horizontal: 8),
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color:Colors.teal,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child:Text(categories[index]),
-                );
-              },
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
               ),
-            ),
-            Expanded(
-              child: ListView.separated(
-                  itemCount:dummyTasks.length,
-                  itemBuilder: (context , index){
-                    return TaskCard(task: dummyTasks[index]);
-                  },
-                separatorBuilder: (BuildContext context, int index)  => SizedBox(height: 8,),
-              ),
-            ),
-          ],
-        ),
+            );
+          }
+
+          if (snapshot.hasData) {
+            return const HomePage();
+          }
+
+          return const LoginPage();
+        },
       ),
     );
   }
 }
-
