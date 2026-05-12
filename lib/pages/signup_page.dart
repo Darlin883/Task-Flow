@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -26,14 +27,20 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (mounted) {
         Navigator.pop(context);
       }
+    } on TimeoutException {
+      setState(() {
+        errorMessage = 'Connection timed out. Check your internet and try again.';
+      });
     } on FirebaseAuthException catch (e) {
       setState(() {
         errorMessage = e.message ?? 'Signup failed';

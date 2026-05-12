@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,29 +14,44 @@ class AddTaskPage extends StatefulWidget {
 class _AddTaskPageState extends State<AddTaskPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController titleController = TextEditingController();
+  final TextEditingController titleController =
+      TextEditingController();
 
   String selectedCategory = 'Personal';
   String selectedPriority = 'medium';
 
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
-      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final uid =
+          FirebaseAuth.instance.currentUser!.uid;
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .collection('tasks')
-          .add({
-        'title': titleController.text.trim(),
-        'category': selectedCategory,
-        'dueDate': DateTime.now().toIso8601String(),
-        'priority': selectedPriority,
-        'isCompleted': false,
-      });
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('tasks')
+            .add({
+          'title': titleController.text.trim(),
+          'category': selectedCategory,
+          'dueDate':
+              DateTime.now().toIso8601String(),
+          'priority': selectedPriority,
+          'isCompleted': false,
+          'completedAt': null,
+        }).timeout(const Duration(seconds: 10));
 
-      if (mounted) {
-        Navigator.pop(context);
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text('Could not add task: $e'),
+            ),
+          );
+        }
       }
     }
   }
@@ -60,11 +77,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
             children: [
               TextFormField(
                 controller: titleController,
-                decoration: const InputDecoration(labelText: 'Task Title'),
+                decoration: const InputDecoration(
+                  labelText: 'Task Title',
+                ),
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
+                  if (value == null ||
+                      value.trim().isEmpty) {
                     return 'Enter a task title';
                   }
+
                   return null;
                 },
               ),
@@ -103,9 +124,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'low', child: Text('Low')),
-                  DropdownMenuItem(value: 'medium', child: Text('Medium')),
-                  DropdownMenuItem(value: 'high', child: Text('High')),
+                  DropdownMenuItem(
+                    value: 'low',
+                    child: Text('Low'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'medium',
+                    child: Text('Medium'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'high',
+                    child: Text('High'),
+                  ),
                 ],
                 onChanged: (value) {
                   setState(() {

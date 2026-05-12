@@ -5,6 +5,7 @@ class Task {
   final DateTime dueDate;
   final String priority;
   final bool isCompleted;
+  final DateTime? completedAt;
 
   Task({
     required this.id,
@@ -13,17 +14,8 @@ class Task {
     required this.dueDate,
     required this.priority,
     required this.isCompleted,
+    this.completedAt,
   });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'category': category,
-      'dueDate': dueDate.toIso8601String(),
-      'priority': priority,
-      'isCompleted': isCompleted,
-    };
-  }
 
   factory Task.fromJson(Map<String, dynamic> json, String docId) {
     return Task(
@@ -33,8 +25,9 @@ class Task {
       dueDate: DateTime.parse(json['dueDate']),
       priority: json['priority'] ?? 'medium',
       isCompleted: json['isCompleted'] ?? false,
+      completedAt: json['completedAt'] != null
+          ? DateTime.parse(json['completedAt'])
+          : null,
     );
   }
 }
-
-List<String> categories = ['All', 'Work', 'Personal', 'Shopping'];
